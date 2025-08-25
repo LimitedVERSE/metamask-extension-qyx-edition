@@ -238,8 +238,9 @@ export const EmptyNetworksState: Story = {
         'Multichain Account',
       );
       // Remove all multichain networks to show empty state
-      mockStateWithEmptyNetworks.metamask.multichainNetworkConfigurationsByChainId = {};
-      
+      mockStateWithEmptyNetworks.metamask.multichainNetworkConfigurationsByChainId =
+        {};
+
       const store = mockStore(mockStateWithEmptyNetworks);
       return (
         <Provider store={store}>
