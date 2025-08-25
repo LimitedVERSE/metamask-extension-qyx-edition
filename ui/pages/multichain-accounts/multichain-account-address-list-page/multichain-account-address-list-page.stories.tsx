@@ -29,7 +29,9 @@ const Wrapper: React.FC<WrapperProps> = ({
   initialEntries = ['/accounts'],
 }) => (
   <MemoryRouter initialEntries={initialEntries}>
-    <Route path="/multichain-account-address-list/:accountGroupId">{children}</Route>
+    <Route path="/multichain-account-address-list/:accountGroupId">
+      {children}
+    </Route>
   </MemoryRouter>
 );
 
@@ -223,30 +225,6 @@ export const ReceivingAddress: Story = {
               '/multichain-account-address-list/test-group-id?source=receive',
             ]}
           >
-            <Story />
-          </Wrapper>
-        </Provider>
-      );
-    },
-  ],
-};
-
-export const EmptyNetworksState: Story = {
-  decorators: [
-    (Story) => {
-      const accounts = createMultichainAccounts();
-      const mockStateWithEmptyNetworks = createMockState(
-        accounts,
-        'Multichain Account',
-      );
-      // Remove all multichain networks to show empty state
-      mockStateWithEmptyNetworks.metamask.multichainNetworkConfigurationsByChainId =
-        {};
-
-      const store = mockStore(mockStateWithEmptyNetworks);
-      return (
-        <Provider store={store}>
-          <Wrapper>
             <Story />
           </Wrapper>
         </Provider>
