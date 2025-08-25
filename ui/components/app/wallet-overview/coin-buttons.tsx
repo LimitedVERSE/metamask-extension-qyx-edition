@@ -24,7 +24,7 @@ import {
   isNonEvmAccount,
   getSwapsDefaultToken,
 } from '../../../selectors';
-import { getIsMultichainAccountsState1Enabled } from '../../../selectors/multichain-accounts/feature-flags';
+import { getIsMultichainAccountsState2Enabled } from '../../../selectors/multichain-accounts/feature-flags';
 import { getSelectedAccountGroup } from '../../../selectors/multichain-accounts/account-tree';
 import Tooltip from '../../ui/tooltip';
 import { setSwapsFromToken } from '../../../ducks/swaps/swaps';
@@ -106,8 +106,8 @@ const CoinButtons = ({
   const displayNewIconButtons = process.env.REMOVE_GNS;
 
   // Multichain accounts feature flag and selected account group
-  const isMultichainAccountsState1Enabled = useSelector(
-    getIsMultichainAccountsState1Enabled,
+  const isMultichainAccountsState2Enabled = useSelector(
+    getIsMultichainAccountsState2Enabled,
   );
   const selectedAccountGroup = useSelector(getSelectedAccountGroup);
 
@@ -392,7 +392,7 @@ const CoinButtons = ({
     });
 
     // Check if multichain accounts feature is enabled and we have a selected account group
-    if (isMultichainAccountsState1Enabled && selectedAccountGroup) {
+    if (isMultichainAccountsState2Enabled && selectedAccountGroup) {
       // Navigate to the multichain address list page with receive source
       history.push(
         `${MULTICHAIN_ACCOUNT_ADDRESS_LIST_PAGE_ROUTE}/${encodeURIComponent(selectedAccountGroup)}?source=receive`,
@@ -402,7 +402,7 @@ const CoinButtons = ({
       setShowReceiveModal(true);
     }
   }, [
-    isMultichainAccountsState1Enabled,
+    isMultichainAccountsState2Enabled,
     selectedAccountGroup,
     history,
     trackEvent,
