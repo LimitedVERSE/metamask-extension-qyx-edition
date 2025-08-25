@@ -36,7 +36,9 @@ export const MultichainAccountAddressListPage = () => {
 
   // Get accounts for the specific group from the URL
   const accounts = useSelector((state) =>
-    getInternalAccountsFromGroupById(state, decodedAccountGroupId),
+    decodedAccountGroupId
+      ? getInternalAccountsFromGroupById(state, decodedAccountGroupId)
+      : [],
   );
 
   // Get the account group details using the URL parameter
