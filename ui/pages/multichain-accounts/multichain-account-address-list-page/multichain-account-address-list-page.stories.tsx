@@ -29,7 +29,7 @@ const Wrapper: React.FC<WrapperProps> = ({
   initialEntries = ['/accounts'],
 }) => (
   <MemoryRouter initialEntries={initialEntries}>
-    <Route path="*">{children}</Route>
+    <Route path="/multichain-account-address-list/:accountGroupId">{children}</Route>
   </MemoryRouter>
 );
 
@@ -198,7 +198,9 @@ export const Default: Story = {
       );
       return (
         <Provider store={store}>
-          <Wrapper>
+          <Wrapper
+            initialEntries={['/multichain-account-address-list/test-group-id']}
+          >
             <Story />
           </Wrapper>
         </Provider>
