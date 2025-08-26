@@ -7,6 +7,7 @@ import { AccountGroupObject } from '@metamask/account-tree-controller';
 
 import { EthAccountType, SolAccountType } from '@metamask/keyring-api';
 import { KeyringTypes } from '@metamask/keyring-controller';
+import { NetworkConfiguration } from '@metamask/network-controller';
 
 import mockState from '../../../test/data/mock-state.json';
 import { createMockInternalAccount } from '../../../test/jest/mocks';
@@ -149,7 +150,11 @@ describe('Multichain Accounts Selectors', () => {
 
   // Helper to create state with mixed existing and missing accounts
   const createStateWithMixedAccounts = (): MultichainAccountsState &
-    MultichainNetworkConfigurationsByChainIdState => ({
+    MultichainNetworkConfigurationsByChainIdState & {
+      metamask: {
+        networkConfigurationsByChainId: Record<string, NetworkConfiguration>;
+      };
+    } => ({
     ...typedMockState,
     metamask: {
       ...typedMockState.metamask,
