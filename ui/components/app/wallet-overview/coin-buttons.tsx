@@ -395,7 +395,6 @@ const CoinButtons = ({
       },
     });
 
-    // Check if multichain accounts feature is enabled and we have a selected account group
     if (isMultichainAccountsState2Enabled && selectedAccountGroup) {
       // Navigate to the multichain address list page with receive source
       history.push(
