@@ -69,6 +69,7 @@ export const MultichainAccountAddressListPage = () => {
             ariaLabel={t('back')}
             iconName={IconName.ArrowLeft}
             onClick={() => history.goBack()}
+            data-testid="multichain-account-address-list-page-back-button"
           />
         }
       >
