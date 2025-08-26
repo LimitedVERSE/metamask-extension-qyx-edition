@@ -9,7 +9,11 @@ import {
 import { renderWithProvider } from '../../../../../test/jest/rendering';
 import configureStore from '../../../../store/store';
 import { createMockInternalAccount } from '../../../../../test/jest/mocks';
-import { AccountGroupWithInternalAccounts } from '../../../../selectors/multichain-accounts/account-tree.types';
+import {
+  AccountGroupWithInternalAccounts,
+  AccountTreeState,
+  InternalAccountsState,
+} from '../../../../selectors/multichain-accounts/account-tree.types';
 import { createMockMultichainAccountsState } from '../../../../selectors/multichain-accounts/test-utils';
 import { MultichainEditAccountsPage } from './multichain-edit-accounts-page';
 
@@ -227,8 +231,8 @@ const createMockState = (overrides = {}) => {
   };
 
   const mockMultichainState = createMockMultichainAccountsState(
-    accountTreeState as any,
-    internalAccountsState as any,
+    accountTreeState as unknown as AccountTreeState,
+    internalAccountsState as unknown as InternalAccountsState,
   );
 
   return {
