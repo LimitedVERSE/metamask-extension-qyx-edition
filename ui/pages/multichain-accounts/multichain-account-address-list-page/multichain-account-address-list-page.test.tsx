@@ -75,18 +75,24 @@ describe('MultichainAccountAddressListPage', () => {
           wallets: {
             ...mockState.metamask.accountTree.wallets,
             [MOCK_WALLET_ID]: {
-              ...(mockState.metamask.accountTree.wallets as any)[
-                MOCK_WALLET_ID
-              ],
+              ...(
+                mockState.metamask.accountTree.wallets as Record<string, any>
+              )[MOCK_WALLET_ID],
               groups: {
                 [MOCK_GROUP_ID]: {
-                  ...(mockState.metamask.accountTree.wallets as any)[
-                    MOCK_WALLET_ID
-                  ].groups[MOCK_GROUP_ID],
+                  ...(
+                    mockState.metamask.accountTree.wallets as Record<
+                      string,
+                      any
+                    >
+                  )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID],
                   metadata: {
-                    ...(mockState.metamask.accountTree.wallets as any)[
-                      MOCK_WALLET_ID
-                    ].groups[MOCK_GROUP_ID].metadata,
+                    ...(
+                      mockState.metamask.accountTree.wallets as Record<
+                        string,
+                        any
+                      >
+                    )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID].metadata,
                     name: '', // Empty group name
                   },
                 },
@@ -301,14 +307,17 @@ describe('MultichainAccountAddressListPage', () => {
           wallets: {
             ...mockState.metamask.accountTree.wallets,
             [MOCK_WALLET_ID]: {
-              ...(mockState.metamask.accountTree.wallets as any)[
-                MOCK_WALLET_ID
-              ],
+              ...(
+                mockState.metamask.accountTree.wallets as Record<string, any>
+              )[MOCK_WALLET_ID],
               groups: {
                 [MOCK_GROUP_ID]: {
-                  ...(mockState.metamask.accountTree.wallets as any)[
-                    MOCK_WALLET_ID
-                  ].groups[MOCK_GROUP_ID],
+                  ...(
+                    mockState.metamask.accountTree.wallets as Record<
+                      string,
+                      any
+                    >
+                  )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID],
                   accounts: [], // Empty accounts array
                 },
               },
