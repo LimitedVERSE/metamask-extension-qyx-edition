@@ -51,7 +51,6 @@ export const MultichainAccountMenu = ({
     };
 
     const handleAccountAddressesClick = (mouseEvent: React.MouseEvent) => {
-      // TODO: Implement account addresses click handling
       mouseEvent.stopPropagation();
       mouseEvent.preventDefault();
       const multichainAccountAddressesPageRoute = `${MULTICHAIN_ACCOUNT_ADDRESS_LIST_PAGE_ROUTE}/${encodeURIComponent(accountGroupId)}`;
