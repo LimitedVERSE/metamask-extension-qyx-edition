@@ -1,19 +1,22 @@
 import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
-import {
-  AccountGroupId,
-  AccountGroupType,
-  AccountWalletType,
-} from '@metamask/account-api';
+import { AccountGroupId } from '@metamask/account-api';
 import { renderWithProvider } from '../../../../test/lib/render-helpers';
 import mockState from '../../../../test/data/mock-state.json';
 import configureStore from '../../../store/store';
-import { MOCK_ACCOUNT_EOA } from '../../../../test/data/mock-accounts';
 import { MultichainAccountAddressListPage } from './multichain-account-address-list-page';
 
 const mockHistoryGoBack = jest.fn();
 const mockUseParams = jest.fn();
 const mockUseLocation = jest.fn();
+const addressRowsListSearchTestId = 'multichain-address-rows-list-search';
+const addressRowsListTestId = 'multichain-address-rows-list';
+const backButtonTestId = 'multichain-account-address-list-page-back-button';
+
+// Use actual group IDs from mock-state.json
+const MOCK_GROUP_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ/0' as AccountGroupId;
+const MOCK_WALLET_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ';
+const MOCK_GROUP_NAME = 'Account 1';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -30,243 +33,299 @@ describe('MultichainAccountAddressListPage', () => {
     mockUseLocation.mockReturnValue({ search: '' });
   });
 
-  const renderComponent = (
-    selectedAccount = MOCK_ACCOUNT_EOA,
-    groupName = 'Test Account',
-    accountGroupId?: string,
-  ) => {
-    const groupId = 'test-wallet/0' as AccountGroupId;
-
-    // Mock URL parameters - pass the raw group ID (component will decode it)
+  it('renders the page with correct components', () => {
     mockUseParams.mockReturnValue({
-      accountGroupId: accountGroupId || groupId,
+      accountGroupId: MOCK_GROUP_ID,
     });
 
     const store = configureStore({
       metamask: {
         ...mockState.metamask,
-        accountTree: {
-          wallets: {
-            'test-wallet': {
-              id: 'test-wallet',
-              type: AccountWalletType.Entropy,
-              groups: {
-                [groupId]: {
-                  id: groupId,
-                  type: AccountGroupType.MultichainAccount,
-                  accounts: [selectedAccount.id],
-                  metadata: {
-                    name: groupName,
-                    entropy: { groupIndex: 0 },
-                    pinned: false,
-                    hidden: false,
-                  },
-                },
-              },
-              metadata: {
-                name: 'Test Wallet',
-                entropy: { id: 'test' },
-              },
-            },
-          },
-          selectedAccountGroup: groupId,
-        },
-        internalAccounts: {
-          ...mockState.metamask.internalAccounts,
-          accounts: {
-            [selectedAccount.id]: selectedAccount,
-          },
-          selectedAccount: selectedAccount.id,
-        },
-        multichainNetworkConfigurationsByChainId: {
-          'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': {
-            chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
-            name: 'Solana Mainnet',
-            nativeCurrency:
-              'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp/slip44:501',
-            isEvm: false,
-          },
-          'bip122:000000000019d6689c085ae165831e93': {
-            chainId: 'bip122:000000000019d6689c085ae165831e93',
-            name: 'Bitcoin Mainnet',
-            nativeCurrency: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
-            isEvm: false,
-          },
-        },
-      },
-      localeMessages: {
-        currentLocale: 'en',
-        current: {
-          back: 'Back',
-          account: 'Account',
-          addresses: 'Addresses',
-          receivingAddress: 'Receiving address',
-        },
       },
     });
 
-    return renderWithProvider(<MultichainAccountAddressListPage />, store);
-  };
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
 
-  it('renders the page with correct components', () => {
-    const mockAccount = {
-      ...MOCK_ACCOUNT_EOA,
-      metadata: {
-        ...MOCK_ACCOUNT_EOA.metadata,
-        name: 'Individual Account',
-      },
-    };
-
-    renderComponent(mockAccount, 'Test Multichain Account');
-
-    // Check header shows group name (not individual account name)
+    // Check header shows group name from mock state (Account 1)
     expect(
-      screen.getByText('Test Multichain Account / Addresses'),
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
     ).toBeInTheDocument();
 
     // Check back button is present
-    expect(screen.getByLabelText('Back')).toBeInTheDocument();
+    expect(screen.getByTestId(backButtonTestId)).toBeInTheDocument();
 
     // Check address list component is rendered
-    expect(
-      screen.getByTestId('multichain-address-rows-list'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
 
     // Verify search field is rendered
-    expect(
-      screen.getByTestId('multichain-address-rows-list-search'),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId(addressRowsListSearchTestId)).toBeInTheDocument();
   });
 
   it('shows fallback text when no group name is available', () => {
-    const mockAccount = {
-      ...MOCK_ACCOUNT_EOA,
-      metadata: {
-        ...MOCK_ACCOUNT_EOA.metadata,
-        name: 'Individual Account Name',
-      },
-    };
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
 
-    renderComponent(mockAccount, ''); // Empty group name
-
-    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
-  });
-
-  it('handles empty state when no account group is selected', () => {
+    // Create custom state with empty group name
     const store = configureStore({
       metamask: {
         ...mockState.metamask,
         accountTree: {
-          wallets: {},
-          selectedAccountGroup: null as unknown as AccountGroupId,
-        },
-        internalAccounts: {
-          ...mockState.metamask.internalAccounts,
-          accounts: {},
-          selectedAccount: '',
-        },
-        multichainNetworkConfigurationsByChainId: {
-          'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': {
-            chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
-            name: 'Solana Mainnet',
-            nativeCurrency:
-              'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp/slip44:501',
-            isEvm: false,
+          ...mockState.metamask.accountTree,
+          wallets: {
+            ...mockState.metamask.accountTree.wallets,
+            [MOCK_WALLET_ID]: {
+              ...(mockState.metamask.accountTree.wallets as any)[
+                MOCK_WALLET_ID
+              ],
+              groups: {
+                [MOCK_GROUP_ID]: {
+                  ...(mockState.metamask.accountTree.wallets as any)[
+                    MOCK_WALLET_ID
+                  ].groups[MOCK_GROUP_ID],
+                  metadata: {
+                    ...(mockState.metamask.accountTree.wallets as any)[
+                      MOCK_WALLET_ID
+                    ].groups[MOCK_GROUP_ID].metadata,
+                    name: '', // Empty group name
+                  },
+                },
+              },
+            },
           },
-          'bip122:000000000019d6689c085ae165831e93': {
-            chainId: 'bip122:000000000019d6689c085ae165831e93',
-            name: 'Bitcoin Mainnet',
-            nativeCurrency: 'bip122:000000000019d6689c085ae165831e93/slip44:0',
-            isEvm: false,
-          },
-        },
-      },
-      localeMessages: {
-        currentLocale: 'en',
-        current: {
-          back: 'Back',
-          account: 'Account',
-          addresses: 'Addresses',
-          receivingAddress: 'Receiving address',
         },
       },
     });
 
     renderWithProvider(<MultichainAccountAddressListPage />, store);
 
-    // Should show fallback header
     expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
-
-    // MultichainAddressRowsList should show empty state
-    const addressList = screen.getByTestId('multichain-address-rows-list');
-    expect(addressList).toBeInTheDocument();
-
-    // Should show search field even in empty state
-    expect(
-      screen.getByTestId('multichain-address-rows-list-search'),
-    ).toBeInTheDocument();
   });
 
-  it('calls history.goBack when back button is clicked', () => {
-    renderComponent();
+  it('handles back button click', () => {
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
 
-    const backButton = screen.getByLabelText('Back');
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    const backButton = screen.getByTestId(backButtonTestId);
     fireEvent.click(backButton);
 
     expect(mockHistoryGoBack).toHaveBeenCalledTimes(1);
   });
 
-  it('shows receiving address title in receive mode', () => {
-    mockUseLocation.mockReturnValue({ search: '?source=receive' });
+  it('handles non-existent account group gracefully', () => {
+    mockUseParams.mockReturnValue({
+      accountGroupId: 'non-existent-group',
+    });
 
-    const mockAccount = {
-      ...MOCK_ACCOUNT_EOA,
-      metadata: {
-        ...MOCK_ACCOUNT_EOA.metadata,
-        name: 'Individual Account',
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
       },
-    };
+    });
 
-    renderComponent(mockAccount, 'Test Multichain Account');
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
 
-    expect(screen.getByText('Receiving address')).toBeInTheDocument();
+    // Should show fallback text when group doesn't exist
+    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
+
+    // Should still render the address list component (even if empty)
+    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
   });
 
-  it('shows empty networks state', () => {
+  it('handles encoded account group ID', () => {
+    const encodedGroupId = encodeURIComponent(MOCK_GROUP_ID);
+
+    mockUseParams.mockReturnValue({
+      accountGroupId: encodedGroupId,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should still render correctly with encoded ID
+    expect(
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).toBeInTheDocument();
+
+    // Check address list component is rendered
+    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
+  });
+
+  it('shows receiving address title in receive mode', () => {
+    mockUseLocation.mockReturnValue({ search: '?source=receive' });
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should show "Receiving address" instead of "Account 1 / Addresses"
+    expect(screen.getByText('Receiving address')).toBeInTheDocument();
+    expect(
+      screen.queryByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders correctly with multiple accounts in group', () => {
+    // The mock state already has two accounts in the group
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Check that the page renders correctly
+    expect(
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).toBeInTheDocument();
+
+    // The MultichainAddressRowsList component should receive the accounts
+    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
+  });
+
+  it('handles special characters in group ID', () => {
+    const specialGroupId =
+      'entropy:01JKAF3DSGM3AB87EM9N0K41AJ/0' as AccountGroupId;
+    const encodedSpecialGroupId = encodeURIComponent(specialGroupId);
+
+    mockUseParams.mockReturnValue({
+      accountGroupId: encodedSpecialGroupId,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should decode and handle the special characters correctly
+    expect(
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).toBeInTheDocument();
+  });
+
+  it('renders with different query parameters correctly', () => {
+    mockUseLocation.mockReturnValue({ search: '?source=other' });
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should show normal title (not receiving address)
+    expect(
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Receiving address')).not.toBeInTheDocument();
+  });
+
+  it('handles null account group ID', () => {
+    mockUseParams.mockReturnValue({
+      accountGroupId: null,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should show fallback text
+    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
+  });
+
+  it('handles undefined account group ID', () => {
+    mockUseParams.mockReturnValue({
+      accountGroupId: undefined,
+    });
+
+    const store = configureStore({
+      metamask: {
+        ...mockState.metamask,
+      },
+    });
+
+    renderWithProvider(<MultichainAccountAddressListPage />, store);
+
+    // Should show fallback text
+    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
+  });
+
+  it('renders correctly when account group exists but has no accounts', () => {
+    mockUseParams.mockReturnValue({
+      accountGroupId: MOCK_GROUP_ID,
+    });
+
+    // Create custom state with empty accounts array
     const store = configureStore({
       metamask: {
         ...mockState.metamask,
         accountTree: {
-          wallets: {},
-        },
-        internalAccounts: {
-          ...mockState.metamask.internalAccounts,
-          accounts: {},
-          selectedAccount: '',
-        },
-        multichainNetworkConfigurationsByChainId: {}, // Empty networks
-      },
-      localeMessages: {
-        currentLocale: 'en',
-        current: {
-          back: 'Back',
-          account: 'Account',
-          addresses: 'Addresses',
-          receivingAddress: 'Receiving address',
+          ...mockState.metamask.accountTree,
+          wallets: {
+            ...mockState.metamask.accountTree.wallets,
+            [MOCK_WALLET_ID]: {
+              ...(mockState.metamask.accountTree.wallets as any)[
+                MOCK_WALLET_ID
+              ],
+              groups: {
+                [MOCK_GROUP_ID]: {
+                  ...(mockState.metamask.accountTree.wallets as any)[
+                    MOCK_WALLET_ID
+                  ].groups[MOCK_GROUP_ID],
+                  accounts: [], // Empty accounts array
+                },
+              },
+            },
+          },
         },
       },
     });
 
-    // Mock no account group ID in URL params
-    mockUseParams.mockReturnValue({ accountGroupId: undefined });
-
     renderWithProvider(<MultichainAccountAddressListPage />, store);
 
-    // Should show fallback header
-    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
+    // Should still show the group name
+    expect(
+      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
+    ).toBeInTheDocument();
 
-    // MultichainAddressRowsList should render with empty networks
-    const addressList = screen.getByTestId('multichain-address-rows-list');
-    expect(addressList).toBeInTheDocument();
+    // Address list component should still be rendered (even if empty)
+    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
   });
 });
