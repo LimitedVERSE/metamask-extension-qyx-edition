@@ -18,6 +18,10 @@ import {
   MULTICHAIN_ACCOUNT_ADDRESS_LIST_PAGE_ROUTE,
 } from '../../../helpers/constants/routes';
 import {
+  AddressListQueryParams,
+  AddressListSource,
+} from '../../../pages/multichain-accounts/multichain-account-address-list-page';
+import {
   getCurrentKeyring,
   getUseExternalServices,
   getNetworkConfigurationIdByChainId,
@@ -395,7 +399,7 @@ const CoinButtons = ({
     if (isMultichainAccountsState2Enabled && selectedAccountGroup) {
       // Navigate to the multichain address list page with receive source
       history.push(
-        `${MULTICHAIN_ACCOUNT_ADDRESS_LIST_PAGE_ROUTE}/${encodeURIComponent(selectedAccountGroup)}?source=receive`,
+        `${MULTICHAIN_ACCOUNT_ADDRESS_LIST_PAGE_ROUTE}/${encodeURIComponent(selectedAccountGroup)}?${AddressListQueryParams.Source}=${AddressListSource.Receive}`,
       );
     } else {
       // Show the traditional receive modal
