@@ -132,7 +132,7 @@ export const MultichainSiteCellTooltip = ({
                   variant={TextVariant.bodyMdMedium}
                   data-testid="accounts-list-item-plus-more-tooltip"
                 >
-                  {Boolean(accountGroups?.length && accountGroups.length > 0)
+                  {accountGroups?.length && accountGroups.length > 0
                     ? t('moreAccounts', [
                         typeof accountGroups?.length === 'number'
                           ? accountGroups.length - TOOLTIP_LIMIT

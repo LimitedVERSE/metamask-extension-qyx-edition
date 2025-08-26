@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { CaipChainId } from '@metamask/utils';
+import { AccountGroupId } from '@metamask/account-api';
 import {
   BackgroundColor,
   BorderColor,
@@ -18,12 +19,11 @@ import {
   MetaMetricsEventCategory,
   MetaMetricsEventName,
 } from '../../../../shared/constants/metametrics';
-import { MultichainSiteCellTooltip } from './tool-tip/multichain-site-cell-tooltip';
 import { AccountGroupWithInternalAccounts } from '../../../selectors/multichain-accounts/account-tree.types';
 import { SiteCellConnectionListItem } from '../../multichain/pages/review-permissions-page/site-cell/site-cell-connection-list-item';
 import { MultichainEditAccountsModal } from '../permissions/edit-accounts-modal/multichain-edit-accounts-modal';
-import { AccountGroupId } from '@metamask/account-api';
 import { EvmAndMultichainNetworkConfigurationsWithCaipChainId } from '../../../selectors/selectors.types';
+import { MultichainSiteCellTooltip } from './tool-tip/multichain-site-cell-tooltip';
 
 type MultichainSiteCellProps = {
   nonTestNetworks: EvmAndMultichainNetworkConfigurationsWithCaipChainId[];
