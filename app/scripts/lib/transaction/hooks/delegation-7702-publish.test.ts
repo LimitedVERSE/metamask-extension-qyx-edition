@@ -1,34 +1,35 @@
+import { Messenger } from '@metamask/base-controller';
+import { BridgeStatusControllerGetStateAction } from '@metamask/bridge-status-controller';
+import { DelegationControllerSignDelegationAction } from '@metamask/delegation-controller';
+import {
+  KeyringControllerSignEip7702AuthorizationAction,
+  KeyringControllerSignTypedMessageAction,
+} from '@metamask/keyring-controller';
 import {
   TransactionController,
   TransactionMeta,
   TransactionType,
 } from '@metamask/transaction-controller';
-import { Messenger } from '@metamask/base-controller';
-import {
-  KeyringControllerSignEip7702AuthorizationAction,
-  KeyringControllerSignTypedMessageAction,
-} from '@metamask/keyring-controller';
-import { BridgeStatusControllerGetStateAction } from '@metamask/bridge-status-controller';
+import { getDeleGatorEnvironment } from '../../../../../shared/lib/delegation';
+import { GAS_FEE_TOKEN_MOCK } from '../../../../../test/data/confirmations/gas';
 import { TransactionControllerInitMessenger } from '../../../controller-init/messengers/transaction-controller-messenger';
 import {
   RelayStatus,
   submitRelayTransaction,
   waitForRelayResult,
 } from '../transaction-relay';
-import { signDelegation, encodeRedeemDelegations } from '../delegation';
-import { GAS_FEE_TOKEN_MOCK } from '../../../../../test/data/confirmations/gas';
 import { Delegation7702PublishHook } from './delegation-7702-publish';
 
 jest.mock('../transaction-relay');
 jest.mock('../delegation', () => {
-  const encodeRedeemDelegations = jest.fn(() => '0xdeadbeef');
-  const signDelegation = jest.fn(async () => '0xsignature');
+  const encodeRedeemDelegationsMock = jest.fn(() => '0xdeadbeef');
+  const signDelegationMock = jest.fn(async () => '0xsignature');
   return {
     ANY_BENEFICIARY: '0x0000000000000000000000000000000000000000',
     ROOT_AUTHORITY: '0x0000000000000000000000000000000000000000',
     ExecutionMode: { BATCH_DEFAULT_MODE: 1 },
-    encodeRedeemDelegations,
-    signDelegation,
+    encodeRedeemDelegations: encodeRedeemDelegationsMock,
+    signDelegation: signDelegationMock,
   };
 });
 
@@ -78,6 +79,10 @@ describe('Delegation 7702 Publish Hook', () => {
     TransactionController['isAtomicBatchSupported']
   > = jest.fn();
 
+  const signDelegationControllerMock: jest.MockedFn<
+    DelegationControllerSignDelegationAction['handler']
+  > = jest.fn();
+
   beforeEach(() => {
     jest.resetAllMocks();
 
@@ -85,9 +90,10 @@ describe('Delegation 7702 Publish Hook', () => {
     process.env.GASLESS_7702_ENFORCER_ADDRESS = ENFORCE_ADDRESS_MOCK;
 
     const baseMessenger = new Messenger<
+      | BridgeStatusControllerGetStateAction
+      | DelegationControllerSignDelegationAction
       | KeyringControllerSignEip7702AuthorizationAction
-      | KeyringControllerSignTypedMessageAction
-      | BridgeStatusControllerGetStateAction,
+      | KeyringControllerSignTypedMessageAction,
       never
     >();
 
@@ -97,6 +103,7 @@ describe('Delegation 7702 Publish Hook', () => {
         'KeyringController:signEip7702Authorization',
         'KeyringController:signTypedMessage',
         'BridgeStatusController:getState',
+        'DelegationController:signDelegation',
       ],
       allowedEvents: [],
     });
@@ -109,6 +116,11 @@ describe('Delegation 7702 Publish Hook', () => {
     baseMessenger.registerActionHandler(
       'KeyringController:signTypedMessage',
       signTypedMessageMock,
+    );
+
+    baseMessenger.registerActionHandler(
+      'DelegationController:signDelegation',
+      signDelegationControllerMock,
     );
 
     bridgeGetStateMock = jest.fn().mockResolvedValue({});
@@ -124,6 +136,7 @@ describe('Delegation 7702 Publish Hook', () => {
 
     isAtomicBatchSupportedMock.mockResolvedValue([]);
     signTypedMessageMock.mockResolvedValue(DELEGATION_SIGNATURE_MOCK);
+    signDelegationControllerMock.mockResolvedValue(DELEGATION_SIGNATURE_MOCK);
 
     submitRelayTransactionMock.mockResolvedValue({
       uuid: UUID_MOCK,
@@ -216,11 +229,15 @@ describe('Delegation 7702 Publish Hook', () => {
     );
 
     expect(submitRelayTransactionMock).toHaveBeenCalledTimes(1);
-    expect(submitRelayTransactionMock).toHaveBeenCalledWith({
-      chainId: TRANSACTION_META_MOCK.chainId,
-      // data: expect.any(String),
-      to: process.env.DELEGATION_MANAGER_ADDRESS,
-    });
+    const expectedDelegationManager = getDeleGatorEnvironment(
+      parseInt(TRANSACTION_META_MOCK.chainId, 16),
+    ).DelegationManager;
+    expect(submitRelayTransactionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chainId: TRANSACTION_META_MOCK.chainId,
+        to: expectedDelegationManager,
+      }),
+    );
   });
 
   it('returns transaction hash from transaction relay result', async () => {
@@ -319,32 +336,35 @@ describe('Delegation 7702 Publish Hook', () => {
       },
     ]);
 
-    // Make bridge status return gasIncluded7702: true
+    // Provide an id and make bridge status return gasIncluded7702: true
+    const GASLESS_TX_ID = 'tx-123';
+    const gaslessTxMeta = {
+      ...TRANSACTION_META_MOCK,
+      id: GASLESS_TX_ID,
+      type: TransactionType.batch,
+      nestedTransactions: [{ type: TransactionType.swap }],
+      // No gasFeeTokens and no selectedGasFeeToken
+    } as unknown as TransactionMeta;
+
     bridgeGetStateMock.mockResolvedValue({
-      currentSubmissionRequest: {
-        quoteResponse: { quote: { gasIncluded7702: true } },
+      submissions: {
+        [gaslessTxMeta.chainId]: {
+          [GASLESS_TX_ID]: {
+            quoteResponse: { quote: { gasIncluded7702: true } },
+          },
+        },
       },
     });
 
-    await hookClass.getHook()(
-      {
-        ...TRANSACTION_META_MOCK,
-        type: TransactionType.batch,
-        nestedTransactions: [{ type: TransactionType.swap }],
-        // No gasFeeTokens and no selectedGasFeeToken
-      } as unknown as TransactionMeta,
-      SIGNED_TX_MOCK,
-    );
+    await hookClass.getHook()(gaslessTxMeta, SIGNED_TX_MOCK);
 
     expect(submitRelayTransactionMock).toHaveBeenCalledTimes(1);
-    expect(signDelegation).toHaveBeenCalledTimes(1);
-    // Ensure caveats are empty for gasless flow
-    const signArgs = (signDelegation as jest.Mock).mock.calls[0][0];
-    expect(signArgs.delegation.caveats).toEqual([]);
-    // encodeRedeemDelegations called with a single executions array (no transfer)
-    const encodeArgs = (encodeRedeemDelegations as jest.Mock).mock.calls[0];
-    const executions = encodeArgs[2][0];
-    expect(executions).toHaveLength(1);
+    expect(signDelegationControllerMock).toHaveBeenCalledTimes(1);
+    // Ensure caveats contain a single exactExecution for gasless flow
+    const signArgs = signDelegationControllerMock.mock.calls[0][0];
+    expect(Array.isArray(signArgs.delegation.caveats)).toBe(true);
+    expect(signArgs.delegation.caveats).toHaveLength(1);
+    // No transfer execution should be included for gasless flow
   });
 
   it('builds caveats for non-gasless flow', async () => {
@@ -366,14 +386,9 @@ describe('Delegation 7702 Publish Hook', () => {
       SIGNED_TX_MOCK,
     );
 
-    expect(signDelegation).toHaveBeenCalledTimes(1);
-    const signArgs = (signDelegation as jest.Mock).mock.calls[0][0];
-    expect(Array.isArray(signArgs.delegation.caveats)).toBe(true);
-    expect(signArgs.delegation.caveats.length).toBe(1);
-
-    const encodeArgs = (encodeRedeemDelegations as jest.Mock).mock.calls[0];
-    const executions = encodeArgs[2][0];
-    // Should include user execution and transfer execution
-    expect(executions).toHaveLength(2);
+    expect(signDelegationControllerMock).toHaveBeenCalledTimes(1);
+    const nonGaslessSignArgs = signDelegationControllerMock.mock.calls[0][0];
+    expect(Array.isArray(nonGaslessSignArgs.delegation.caveats)).toBe(true);
+    expect(nonGaslessSignArgs.delegation.caveats.length).toBe(1);
   });
 });

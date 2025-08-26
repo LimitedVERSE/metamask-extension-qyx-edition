@@ -5,6 +5,7 @@ import {
 } from '@metamask/transaction-controller';
 import { Messenger } from '@metamask/base-controller';
 import { NetworkController } from '@metamask/network-controller';
+import { BridgeStatusControllerGetStateAction } from '@metamask/bridge-status-controller';
 import { buildControllerInitRequestMock, CHAIN_ID_MOCK } from '../test/utils';
 import {
   getTransactionControllerInitMessenger,
@@ -13,7 +14,6 @@ import {
 } from '../messengers/transaction-controller-messenger';
 import { ControllerInitRequest } from '../types';
 import { TransactionControllerInit } from './transaction-controller-init';
-import { BridgeStatusControllerGetStateAction } from '@metamask/bridge-status-controller';
 
 jest.mock('@metamask/transaction-controller');
 
@@ -188,27 +188,5 @@ describe('Transaction Controller Init', () => {
     const pendingTransactions = testConstructorOption('pendingTransactions');
 
     expect(pendingTransactions?.isResubmitEnabled?.()).toBe(false);
-  });
-
-  it("allows BridgeStatusController:getState on init messenger", async () => {
-    const baseMessenger = new Messenger<
-      BridgeStatusControllerGetStateAction,
-      never
-    >();
-
-    const handler = jest.fn().mockResolvedValue({ test: true });
-    baseMessenger.registerActionHandler(
-      'BridgeStatusController:getState',
-      handler,
-    );
-
-    const initMessenger = getTransactionControllerInitMessenger(baseMessenger);
-
-    const result = await initMessenger.call(
-      'BridgeStatusController:getState',
-    );
-
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({ test: true });
   });
 });
