@@ -22,6 +22,10 @@ import {
   getInternalAccountsFromGroupById,
   getMultichainAccountGroupById,
 } from '../../../selectors/multichain-accounts/account-tree';
+import {
+  AddressListQueryParams,
+  AddressListSource,
+} from './multichain-account-address-list-page.types';
 
 export const MultichainAccountAddressListPage = () => {
   const t = useI18nContext();
@@ -50,7 +54,9 @@ export const MultichainAccountAddressListPage = () => {
 
   // Check if we're in "receive" mode based on query parameter
   const searchParams = new URLSearchParams(location.search);
-  const isReceiveMode = searchParams.get('source') === 'receive';
+  const isReceiveMode =
+    searchParams.get(AddressListQueryParams.Source) ===
+    AddressListSource.Receive;
 
   // Determine the page title based on the mode
   const pageTitle = isReceiveMode
