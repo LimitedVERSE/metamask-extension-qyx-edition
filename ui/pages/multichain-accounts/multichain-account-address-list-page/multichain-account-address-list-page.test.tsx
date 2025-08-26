@@ -1,6 +1,6 @@
 import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
-import { AccountGroupId, AccountWalletId } from '@metamask/account-api';
+import { AccountGroupId } from '@metamask/account-api';
 import { renderWithProvider } from '../../../../test/lib/render-helpers';
 import mockState from '../../../../test/data/mock-state.json';
 import configureStore from '../../../store/store';
@@ -15,7 +15,6 @@ const backButtonTestId = 'multichain-account-address-list-page-back-button';
 
 // Use actual group IDs from mock-state.json
 const MOCK_GROUP_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ/0' as AccountGroupId;
-const MOCK_WALLET_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ' as AccountWalletId;
 const MOCK_GROUP_NAME = 'Account 1';
 
 jest.mock('react-router-dom', () => ({
