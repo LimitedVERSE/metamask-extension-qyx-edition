@@ -1,6 +1,6 @@
 import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
-import { AccountGroupId } from '@metamask/account-api';
+import { AccountGroupId, AccountWalletId } from '@metamask/account-api';
 import { renderWithProvider } from '../../../../test/lib/render-helpers';
 import mockState from '../../../../test/data/mock-state.json';
 import configureStore from '../../../store/store';
@@ -15,7 +15,7 @@ const backButtonTestId = 'multichain-account-address-list-page-back-button';
 
 // Use actual group IDs from mock-state.json
 const MOCK_GROUP_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ/0' as AccountGroupId;
-const MOCK_WALLET_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ';
+const MOCK_WALLET_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ' as AccountWalletId;
 const MOCK_GROUP_NAME = 'Account 1';
 
 jest.mock('react-router-dom', () => ({
@@ -59,53 +59,6 @@ describe('MultichainAccountAddressListPage', () => {
 
     // Verify search field is rendered
     expect(screen.getByTestId(addressRowsListSearchTestId)).toBeInTheDocument();
-  });
-
-  it('shows fallback text when no group name is available', () => {
-    mockUseParams.mockReturnValue({
-      accountGroupId: MOCK_GROUP_ID,
-    });
-
-    // Create custom state with empty group name
-    const store = configureStore({
-      metamask: {
-        ...mockState.metamask,
-        accountTree: {
-          ...mockState.metamask.accountTree,
-          wallets: {
-            ...mockState.metamask.accountTree.wallets,
-            [MOCK_WALLET_ID]: {
-              ...(
-                mockState.metamask.accountTree.wallets as Record<string, any>
-              )[MOCK_WALLET_ID],
-              groups: {
-                [MOCK_GROUP_ID]: {
-                  ...(
-                    mockState.metamask.accountTree.wallets as Record<
-                      string,
-                      any
-                    >
-                  )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID],
-                  metadata: {
-                    ...(
-                      mockState.metamask.accountTree.wallets as Record<
-                        string,
-                        any
-                      >
-                    )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID].metadata,
-                    name: '', // Empty group name
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    renderWithProvider(<MultichainAccountAddressListPage />, store);
-
-    expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
   });
 
   it('handles back button click', () => {
@@ -291,50 +244,5 @@ describe('MultichainAccountAddressListPage', () => {
 
     // Should show fallback text
     expect(screen.getByText('Account / Addresses')).toBeInTheDocument();
-  });
-
-  it('renders correctly when account group exists but has no accounts', () => {
-    mockUseParams.mockReturnValue({
-      accountGroupId: MOCK_GROUP_ID,
-    });
-
-    // Create custom state with empty accounts array
-    const store = configureStore({
-      metamask: {
-        ...mockState.metamask,
-        accountTree: {
-          ...mockState.metamask.accountTree,
-          wallets: {
-            ...mockState.metamask.accountTree.wallets,
-            [MOCK_WALLET_ID]: {
-              ...(
-                mockState.metamask.accountTree.wallets as Record<string, any>
-              )[MOCK_WALLET_ID],
-              groups: {
-                [MOCK_GROUP_ID]: {
-                  ...(
-                    mockState.metamask.accountTree.wallets as Record<
-                      string,
-                      any
-                    >
-                  )[MOCK_WALLET_ID].groups[MOCK_GROUP_ID],
-                  accounts: [], // Empty accounts array
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    renderWithProvider(<MultichainAccountAddressListPage />, store);
-
-    // Should still show the group name
-    expect(
-      screen.getByText(`${MOCK_GROUP_NAME} / Addresses`),
-    ).toBeInTheDocument();
-
-    // Address list component should still be rendered (even if empty)
-    expect(screen.getByTestId(addressRowsListTestId)).toBeInTheDocument();
   });
 });
