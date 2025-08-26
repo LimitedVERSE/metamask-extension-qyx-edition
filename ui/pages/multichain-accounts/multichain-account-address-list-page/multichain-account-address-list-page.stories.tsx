@@ -35,7 +35,6 @@ const Wrapper: React.FC<WrapperProps> = ({
   </MemoryRouter>
 );
 
-// Helper function to create mock multichain accounts
 const createMultichainAccounts = () => {
   const evmAccount = {
     ...MOCK_ACCOUNT_EOA,
