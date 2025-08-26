@@ -3,20 +3,21 @@ import { AccountGroupId, AccountWalletId } from '@metamask/account-api';
 import { useSelector } from 'react-redux';
 import { useI18nContext } from '../../../../hooks/useI18nContext';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
   Box,
-  ModalFooter,
   ButtonPrimary,
   ButtonPrimarySize,
-  ModalBody,
+  Text,
+  IconName,
+  IconSize,
+  ButtonBaseSize,
+  Icon,
 } from '../../../component-library';
 
 import {
+  BackgroundColor,
   Display,
   FlexDirection,
+  JustifyContent,
 } from '../../../../helpers/constants/design-system';
 import {
   MetaMetricsEventCategory,
@@ -26,21 +27,23 @@ import { MetaMetricsContext } from '../../../../contexts/metametrics';
 import { MultichainAccountList } from '../../multichain-account-list';
 import { getAccountTree } from '../../../../selectors/multichain-accounts/account-tree';
 import { AccountGroupWithInternalAccounts } from '../../../../selectors/multichain-accounts/account-tree.types';
+import { Content, Footer, Header, Page } from '../../../multichain/pages/page';
+import IconButton from '../../../ui/icon-button';
 
-type MultichainEditAccountsModalProps = {
+type MultichainEditAccountsPageProps = {
   defaultSelectedAccountGroups: AccountGroupId[];
   supportedAccountGroups: AccountGroupWithInternalAccounts[];
-  onClose: () => void;
   onSubmit: (accountGroups: AccountGroupId[]) => void;
+  onClose: () => void;
 };
 
-export const MultichainEditAccountsModal: React.FC<
-  MultichainEditAccountsModalProps
+export const MultichainEditAccountsPage: React.FC<
+  MultichainEditAccountsPageProps
 > = ({
   defaultSelectedAccountGroups,
   supportedAccountGroups,
-  onClose,
   onSubmit,
+  onClose,
 }) => {
   const t = useI18nContext();
   const trackEvent = useContext(MetaMetricsContext);
@@ -93,59 +96,75 @@ export const MultichainEditAccountsModal: React.FC<
   const selectedSet = new Set(selectedAccountGroups);
 
   return (
-    <Modal
-      isOpen
-      onClose={onClose}
-      data-testid="edit-accounts-modal"
-      className="edit-accounts-modal"
+    <Page
+      data-testid="modal-page"
+      className="main-container connect-page"
+      backgroundColor={BackgroundColor.backgroundDefault}
     >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader onClose={onClose}>{t('editAccounts')}</ModalHeader>
-        <ModalBody
-          paddingLeft={0}
-          paddingRight={0}
-          className="edit-accounts-modal__body"
+      <Header
+        paddingTop={8}
+        paddingBottom={0}
+        startAccessory={
+          <IconButton
+            onClick={onClose}
+            size={ButtonBaseSize.Md}
+            label={'close'}
+            aria-label="Close"
+            Icon={<Icon name={IconName.Close} size={IconSize.Md} />}
+          />
+        }
+      >
+        <Box
+          display={Display.Flex}
+          justifyContent={JustifyContent.center}
+          marginBottom={8}
         >
-          <Box display={Display.Flex} flexDirection={FlexDirection.Column}>
-            <MultichainAccountList
-              wallets={walletsWithSupportedAccountGroups}
-              selectedAccountGroups={selectedAccountGroups}
-              handleAccountClick={handleAccountClick}
-            />
-          </Box>
-        </ModalBody>
-        <ModalFooter>
-          <ButtonPrimary
-            data-testid="connect-more-accounts-button"
-            onClick={() => {
-              const addedAccounts = selectedAccountGroups.filter(
-                (accountGroup) => !defaultSet.has(accountGroup),
-              );
-              const removedAccounts = defaultSelectedAccountGroups.filter(
-                (accountGroup) => !selectedSet.has(accountGroup),
-              );
+          <Text>{t('editAccounts')}</Text>
+        </Box>
+      </Header>
+      <Content
+        paddingLeft={4}
+        paddingRight={4}
+        backgroundColor={BackgroundColor.transparent}
+      >
+        <Box display={Display.Flex} flexDirection={FlexDirection.Column}>
+          <MultichainAccountList
+            wallets={walletsWithSupportedAccountGroups}
+            selectedAccountGroups={selectedAccountGroups}
+            handleAccountClick={handleAccountClick}
+          />
+        </Box>
+      </Content>
+      <Footer>
+        <ButtonPrimary
+          data-testid="connect-more-accounts-button"
+          onClick={() => {
+            const addedAccounts = selectedAccountGroups.filter(
+              (accountGroup) => !defaultSet.has(accountGroup),
+            );
+            const removedAccounts = defaultSelectedAccountGroups.filter(
+              (accountGroup) => !selectedSet.has(accountGroup),
+            );
 
-              onSubmit(selectedAccountGroups);
-              trackEvent({
-                category: MetaMetricsEventCategory.Permissions,
-                event: MetaMetricsEventName.UpdatePermissionedAccounts,
-                properties: {
-                  addedAccounts: addedAccounts.length,
-                  removedAccounts: removedAccounts.length,
-                  location: 'Edit Accounts Modal',
-                },
-              });
+            onSubmit(selectedAccountGroups);
+            trackEvent({
+              category: MetaMetricsEventCategory.Permissions,
+              event: MetaMetricsEventName.UpdatePermissionedAccounts,
+              properties: {
+                addedAccounts: addedAccounts.length,
+                removedAccounts: removedAccounts.length,
+                location: 'Edit Accounts Modal',
+              },
+            });
 
-              onClose();
-            }}
-            size={ButtonPrimarySize.Lg}
-            block
-          >
-            {t('connect')}
-          </ButtonPrimary>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+            onClose();
+          }}
+          size={ButtonPrimarySize.Lg}
+          block
+        >
+          {t('connect')}
+        </ButtonPrimary>
+      </Footer>
+    </Page>
   );
 };

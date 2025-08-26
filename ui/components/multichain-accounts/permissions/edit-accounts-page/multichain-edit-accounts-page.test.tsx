@@ -9,9 +9,13 @@ import {
 import { renderWithProvider } from '../../../../../test/jest/rendering';
 import configureStore from '../../../../store/store';
 import { createMockInternalAccount } from '../../../../../test/jest/mocks';
-import { AccountGroupWithInternalAccounts } from '../../../../selectors/multichain-accounts/account-tree.types';
+import {
+  AccountGroupWithInternalAccounts,
+  AccountTreeState,
+  InternalAccountsState,
+} from '../../../../selectors/multichain-accounts/account-tree.types';
 import { createMockMultichainAccountsState } from '../../../../selectors/multichain-accounts/test-utils';
-import { MultichainEditAccountsModal } from './multichain-edit-accounts-modal';
+import { MultichainEditAccountsPage } from './multichain-edit-accounts-page';
 
 const MOCK_WALLET_ID = 'entropy:01JKAF3DSGM3AB87EM9N0K41AJ';
 const MOCK_GROUP_ID_1 =
@@ -21,7 +25,6 @@ const MOCK_GROUP_ID_2 =
 const MOCK_GROUP_ID_3 =
   'entropy:01JKAF3DSGM3AB87EM9N0K41AJ/2' as AccountGroupId;
 
-// Test IDs
 const TEST_IDS = {
   CONNECT_MORE_ACCOUNTS_BUTTON: 'connect-more-accounts-button',
   MULTICHAIN_ACCOUNT_CELL: (groupId: string) =>
@@ -228,8 +231,8 @@ const createMockState = (overrides = {}) => {
   };
 
   const mockMultichainState = createMockMultichainAccountsState(
-    accountTreeState as any,
-    internalAccountsState as any,
+    accountTreeState as unknown as AccountTreeState,
+    internalAccountsState as unknown as InternalAccountsState,
   );
 
   return {
@@ -263,12 +266,12 @@ const render = (
   };
 
   return renderWithProvider(
-    <MultichainEditAccountsModal {...defaultProps} />,
+    <MultichainEditAccountsPage {...defaultProps} />,
     store,
   );
 };
 
-describe('MultichainEditAccountsModal', () => {
+describe('MultichainEditAccountsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -400,7 +403,7 @@ describe('MultichainEditAccountsModal', () => {
 
     // Rerender with all accounts selected
     rerender(
-      <MultichainEditAccountsModal
+      <MultichainEditAccountsPage
         supportedAccountGroups={createMockAccountGroups()}
         defaultSelectedAccountGroups={[
           MOCK_GROUP_ID_1,
