@@ -8,20 +8,19 @@ import {
 } from '@metamask/account-api';
 import { EthAccountType, EthScope } from '@metamask/keyring-api';
 import { ETH_EOA_METHODS } from '../../../../../shared/constants/eth-methods';
-import { MultichainEditAccountsModal } from './multichain-edit-accounts-modal';
+import { MultichainEditAccountsPage } from './multichain-edit-accounts-page';
 import { AccountGroupWithInternalAccounts } from '../../../../selectors/multichain-accounts/account-tree.types';
 import configureStore from '../../../../store/store';
 import mockState from '../../../../../test/data/mock-state.json';
 
 export default {
-  title:
-    'Components/MultichainAccounts/Permissions/MultichainEditAccountsModal',
-  component: MultichainEditAccountsModal,
+  title: 'Components/MultichainAccounts/Permissions/MultichainEditAccountsPage',
+  component: MultichainEditAccountsPage,
   parameters: {
     docs: {
       description: {
         component:
-          'A modal for editing account permissions for a connected site',
+          'A page for editing account permissions for a connected site',
       },
     },
   },
@@ -29,7 +28,7 @@ export default {
     onClose: { action: 'onClose' },
     onSubmit: { action: 'onSubmit' },
   },
-} as Meta<typeof MultichainEditAccountsModal>;
+} as Meta<typeof MultichainEditAccountsPage>;
 
 const store = configureStore({
   metamask: mockState.metamask,
@@ -129,9 +128,9 @@ const mockSupportedAccountGroups: AccountGroupWithInternalAccounts[] = [
   },
 ];
 
-const Template: StoryFn<typeof MultichainEditAccountsModal> = (args) => (
+const Template: StoryFn<typeof MultichainEditAccountsPage> = (args) => (
   <Provider store={store}>
-    <MultichainEditAccountsModal {...args} />
+    <MultichainEditAccountsPage {...args} />
   </Provider>
 );
 
