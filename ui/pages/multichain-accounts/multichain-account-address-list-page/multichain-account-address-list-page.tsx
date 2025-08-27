@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -18,6 +18,7 @@ import {
 import { TextVariant } from '../../../helpers/constants/design-system';
 import { useI18nContext } from '../../../hooks/useI18nContext';
 import { MultichainAddressRowsList } from '../../../components/multichain-accounts/multichain-address-rows-list';
+import { AddressQRCodeModal } from '../../../components/multichain-accounts/address-qr-code-modal';
 import {
   getInternalAccountsFromGroupById,
   getMultichainAccountGroupById,
@@ -58,6 +59,26 @@ export const MultichainAccountAddressListPage = () => {
     ? t('receivingAddress')
     : `${accountGroup?.metadata?.name || t('account')} / ${t('addresses')}`;
 
+  // QR Modal state
+  const [qrModal, setQrModal] = useState<{
+    isOpen: boolean;
+    address?: string;
+    chainId?: string;
+  }>({ isOpen: false });
+
+  const handleQrClick = (address: string, chainId: string) => {
+    setQrModal({ isOpen: true, address, chainId });
+  };
+
+  const handleQrModalClose = () => {
+    setQrModal({ isOpen: false });
+  };
+
+  // Find account by address for modal
+  const selectedAccount = accounts.find((acc) =>
+    acc.address.toLowerCase() === qrModal.address?.toLowerCase(),
+  );
+
   return (
     <Page className="max-w-[600px]">
       <Header
@@ -78,8 +99,20 @@ export const MultichainAccountAddressListPage = () => {
       </Header>
       <Content>
         <Box flexDirection={BoxFlexDirection.Column}>
-          <MultichainAddressRowsList accounts={accounts} />
+          <MultichainAddressRowsList
+            accounts={accounts}
+            onQrClick={handleQrClick}
+          />
         </Box>
+        {qrModal.isOpen && qrModal.address && qrModal.chainId && (
+          <AddressQRCodeModal
+            isOpen={qrModal.isOpen}
+            onClose={handleQrModalClose}
+            address={qrModal.address}
+            chainId={qrModal.chainId}
+            account={selectedAccount}
+          />
+        )}
       </Content>
     </Page>
   );

@@ -118,19 +118,28 @@ describe('MultichainAddressRow', () => {
     expect(addressRow).toHaveClass('custom-class');
   });
 
-  it('handles QR button click', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  it('handles QR button click with onQrClick callback', () => {
+    const mockOnQrClick = jest.fn();
 
-    renderComponent();
+    renderComponent({ onQrClick: mockOnQrClick });
 
     const qrButton = screen.getByTestId('multichain-address-row-qr-button');
     fireEvent.click(qrButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'QR code clicked for address:',
+    expect(mockOnQrClick).toHaveBeenCalledWith(
       defaultProps.address,
+      defaultProps.chainId,
     );
+  });
 
-    consoleSpy.mockRestore();
+  it('handles QR button click when no onQrClick callback is provided', () => {
+    renderComponent();
+
+    const qrButton = screen.getByTestId('multichain-address-row-qr-button');
+    
+    // Should not throw when no callback is provided
+    expect(() => {
+      fireEvent.click(qrButton);
+    }).not.toThrow();
   });
 });
